@@ -4,6 +4,10 @@
 - Ensure your computer has the necessary drivers installed to transfer data to your ESP32 microcontroller.
   - For example, if your microcontroller relies on a CH343 chip, ensure you have [this driver module](https://github.com/WCHSoftGroup/ch343ser_linux) installed.
 - Install [PlatformIO](https://docs.platformio.org/en/latest/core/installation/methods/installer-script.html)
+- Initialize git submodules to download dependencies:
+```bash
+git submodule update --init --recursive
+```
 - Build [zenoh-pico](https://github.com/eclipse-zenoh/zenoh-pico) examples locally
 ```bash
 git clone https://github.com/eclipse-zenoh/zenoh-pico -b 1.4.0
@@ -33,9 +37,10 @@ source /opt/ros/jazzy/setup.bash
 ros2 run rmw_zenoh_cpp rmw_zenohd
 ```
 
+You can then subscribe to messages published by the ESP32 using:
+
 ```bash
-cd zenoh-pico/build/examples
-./z_sub -m client -e tcp/10.0.0.228:7447 # update with address of your Zenoh router.
+ros2 topic echo /chatter std_msgs/msg/String
 ```
 
-The subscriber should receive messages published by the microcontroller over WiFi.
+The subscriber should receive messages published by the microcontroller.
