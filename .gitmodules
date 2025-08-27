@@ -1,0 +1,3 @@
+[submodule "esp32/lib/PicoROS"]
+	path = esp32/lib/PicoROS
+	url = https://github.com/Pico-ROS/Pico-ROS-software.git
