@@ -19,6 +19,8 @@
 #include <picoros.h>
 #include <picoserdes.h>
 #include <picoparams.h>
+#include <stdio.h>
+#include <stdint.h>
 
 #if Z_FEATURE_PUBLICATION == 1
 // Client mode values (comment/uncomment as needed)
@@ -45,27 +47,60 @@ char zenoh_locator[100] = DEFAULT_LOCATOR;
 
 
 // Example Publisher
-picoros_publisher_t pub_log = {
+picoros_publisher_t pub_odo = {
     .topic = {
-        .name = "chatter",
-        .type = ROSTYPE_NAME(ros_String),
-        .rihs_hash = ROSTYPE_HASH(ros_String),
+        .name = "odom",
+        .type = ROSTYPE_NAME(ros_Odometry),
+        .rihs_hash = ROSTYPE_HASH(ros_Odometry),
     },
 };
 
 // Example node
 picoros_node_t node = {
-    .name = "talker",
+    .name = "odometry_node",
 };
 
 // Buffer for publication, used from this thread
 uint8_t pub_buf[1024];
 
-void publish_log(){
-    printf("Publishing log...\n");
-    char* msg = const_cast<char*>("Hello from Pico-ROS!");
-    size_t len = ps_serialize(pub_buf, &msg, 1020);
-    picoros_publish(&pub_log, pub_buf, len);
+// The distance travelled along the x-axis
+float distance_x = 0.0;
+
+void publish_odometry(float x, float y, float z, float qx, float qy, float qz, float qw){
+    z_clock_t clk = z_clock_now();
+    ros_Odometry odom = {
+        .header = {
+            .stamp = {
+                .sec = clk.tv_sec,
+                .nanosec = clk.tv_nsec,
+            },
+            .frame_id = "odom",
+        },
+        .child_frame_id = "base_link",
+        .pose = {
+            .pose = {
+                .position = {
+                    .x = x,
+                    .y = y,
+                    .z = z,
+                },
+                .orientation = {
+                    .x = qx,
+                    .y = qy,
+                    .z = qz,
+                    .w = qw,
+                },
+            },
+        }
+    };
+    printf("Publishing odometery...\n");
+    size_t len = ps_serialize(pub_buf, &odom, 1024);
+    if (len > 0){
+        picoros_publish(&pub_odo, pub_buf, len);
+    }
+    else{
+        printf("Odometry message serialization error.");
+    }
 }
 
 void setup() {
@@ -134,16 +169,19 @@ void setup() {
     printf("Starting Pico-ROS node %s domain:%d\n", node.name, node.domain_id);
     picoros_node_init(&node);
 
-    printf("Declaring publisher on %s\n", pub_log.topic.name);
-    picoros_publisher_declare(&node, &pub_log);
+    printf("Declaring publisher on %s\n", pub_odo.topic.name);
+    picoros_publisher_declare(&node, &pub_odo);
     Serial.println("Zenoh setup finished!");
 
     delay(300);
 }
 
 void loop() {
-    publish_log();
-    z_sleep_s(1);
+    // Simply increment distance_x every loop iteration.
+    distance_x += 0.001;
+    publish_odometry(distance_x, 0.0, 0.0, 0, 0, 0, 1);
+    // Publish at 20hz.
+    z_sleep_ms(50);
 }
 #else
 void setup() {

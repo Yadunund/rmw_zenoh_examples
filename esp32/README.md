@@ -15,7 +15,11 @@ cd zenoh-pico && make
 ```
 
 ## Upload code to the board
-Ensure the connected board is properly configured in [platformio.ini](./platformio.ini).
+The esp32 is programmed to publish `nav_msgs/msg/Odometry` at 50hz.
+
+To compile and upload the program to the esp32 microcontroller, first ensure the connected board is properly configured in [platformio.ini](./platformio.ini).
+
+Then run
 ```bash
 cd esp32
 platformio run
@@ -40,7 +44,7 @@ ros2 run rmw_zenoh_cpp rmw_zenohd
 You can then subscribe to messages published by the ESP32 using:
 
 ```bash
-ros2 topic echo /chatter std_msgs/msg/String
+ros2 topic echo /odom nav_msgs/msg/Odometry
 ```
 
 The subscriber should receive messages published by the microcontroller.
