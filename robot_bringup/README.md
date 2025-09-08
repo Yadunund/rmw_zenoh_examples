@@ -210,3 +210,32 @@ downsampling: [
   },
 ],
 ```
+Try running a second router on the same host which represents the cloud router and open an RViz session connected to this router.
+
+
+```bash
+source /opt/ros/jazzy/setup.bash
+cd robot_bringup
+export ZENOH_ROUTER_CONFIG_URI=zenoh_configs/cloud_router_config.json5
+ros2 run rmw_zenoh_cpp rmw_zenohd
+```
+
+```bash
+source /opt/ros/jazzy/setup.bash
+cd robot_bringup
+export ZENOH_SESSION_CONFIG_URI=zenoh_configs/cloud_session_config.json5
+export RMW_IMPLEMENTATION=rmw_zenoh_cpp
+ros2 rviz2 -d robot.rviz
+```
+
+The visualization of the robot in this "cloud" RViz session will update at a slower rate.
+This is due to the robot router automatically downsampling messages of configured topics before sending it to the cloud router.
+
+You can also measure the frequency of these topics,
+```bash
+source /opt/ros/jazzy/setup.bash
+cd robot_bringup
+export ZENOH_SESSION_CONFIG_URI=zenoh_configs/cloud_session_config.json5
+export RMW_IMPLEMENTATION=rmw_zenoh_cpp
+ros2 topic hz /scan
+```
